@@ -1,0 +1,11 @@
+[package]
+name = "xchacha20"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+orion = "0.17.10"
+rustler = "0.36.1"
+
+[lib]
+crate-type = ["dylib"]

@@ -1,13 +1,15 @@
-import nakai/attr
+import gleam/uri
 import nakai/html.{type Node}
 
-pub fn content(from_encrypted_uuid: String) -> Node {
+pub fn content(id: String) -> Node {
+  let assert Ok(id) = uri.percent_decode(id)
+
   html.div([], [
     html.h1([], [html.Text("Hello!")]),
     html.p([], [
-      html.Text("Someone has shared their Find Ting ID with you via QR code."),
+      html.Text(
+        "Someone has shared their Find Ting ID with you via QR code:" <> id,
+      ),
     ]),
-    html.p([], [html.Text("Their encrypted ID is: " <> from_encrypted_uuid)]),
-    html.a([attr.href("/")], [html.Text("Create your own ID")]),
   ])
 }

@@ -34,6 +34,7 @@ pub type CryptoError {
   GenerateNonceError
   EncryptError
   Base64DecodeError
+  InvalidLengthError
   DecryptError
   FormatError
 }
@@ -60,29 +61,28 @@ pub fn encrypt(key: CipherKey, plaintext: String) -> Result(String, CryptoError)
     }
   })
 
-  Ok(bit_array.base64_encode(encrypted, False))
+  Ok(bit_array.base64_encode(bit_array.concat([nonce, encrypted]), False))
 }
 
-pub fn decrypt(
-  key: CipherKey,
-  ciphertext: String,
-) -> Result(String, CryptoError) {
-  use nonce <- result.try({
-    case generate_nonce_ffi() {
-      Ok(result) -> Ok(result)
-      Error(_) -> Error(GenerateNonceError)
-    }
-  })
-
+pub fn decrypt(key: CipherKey, encrypted: String) -> Result(String, CryptoError) {
   use decoded <- result.try({
-    case bit_array.base64_decode(ciphertext) {
+    case bit_array.base64_decode(encrypted) {
       Ok(result) -> Ok(result)
       Error(_) -> Error(Base64DecodeError)
     }
   })
 
+  use _ <- result.try({
+    case bit_array.byte_size(decoded) < 24 {
+      True -> Error(InvalidLengthError)
+      False -> Ok(Nil)
+    }
+  })
+
   use decrypted <- result.try({
-    case decrypt_ffi(key.data, nonce, decoded) {
+    let assert <<nonce:bytes-size(24), ciphertext:bytes>> = decoded
+
+    case decrypt_ffi(key.data, nonce, ciphertext) {
       Ok(result) -> Ok(result)
       Error(_) -> Error(DecryptError)
     }
